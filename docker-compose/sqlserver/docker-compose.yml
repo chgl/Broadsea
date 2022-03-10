@@ -1,0 +1,29 @@
+services:
+  omop-db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    restart: on-failure
+    ports:
+      - "127.0.0.1:1433:1433"
+    environment:
+      MSSQL_PID: "Developer"
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: ${DATASOURCE_PASSWORD:-strong_ohdsi_password}
+    entrypoint: /bin/sh
+    working_dir: /usr/src/init
+    command: "-c './init.sh & /opt/mssql/bin/sqlservr;'"
+    volumes:
+      # note the use of the path relative to the repository root here.
+      # this is required to start the stack from the repo root as
+      # `docker compose -f docker-compose/docker-compose.yaml -f docker-compose/sqlserver/docker-compose.yml up`
+      - ./sqlserver/init:/usr/src/init
+
+  webapi:
+    environment:
+      DATASOURCE_USERNAME: sa
+      DATASOURCE_DRIVERCLASSNAME: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      DATASOURCE_URL: jdbc:sqlserver://omop-db;databasename=ohdsi
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.SQLServer2012Dialect
+      FLYWAY_DATASOURCE_USERNAME: sa
+      FLYWAY_DATASOURCE_DRIVERCLASSNAME: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      FLYWAY_DATASOURCE_URL: jdbc:sqlserver://omop-db;databasename=ohdsi
+      FLYWAY_LOCATIONS: classpath:db/migration/sqlserver

@@ -1,0 +1,30 @@
+services:
+  webapi:
+    image: docker.io/ohdsi/webapi:2.10.1
+    restart: on-failure
+    ports:
+      - "127.0.0.1:8081:8080"
+    environment:
+      DATASOURCE_PASSWORD: ${DATASOURCE_PASSWORD:-strong_ohdsi_password}
+      DATASOURCE_OHDSI_SCHEMA: ohdsi
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: ohdsi
+      SPRING_BATCH_REPOSITORY_TABLEPREFIX: ohdsi.BATCH_
+      FLYWAY_DATASOURCE_PASSWORD: ${DATASOURCE_PASSWORD:-strong_ohdsi_password}
+      FLYWAY_PLACEHOLDERS_OHDSISCHEMA: ohdsi
+      FLYWAY_SCHEMAS: ohdsi
+      SECURITY_CORS_ENABLED: "true"
+      SECURITY_ORIGIN: "*"
+    depends_on:
+      - omop-db
+
+  atlas:
+    image: docker.io/ohdsi/atlas:2.10.1
+    restart: on-failure
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      WEBAPI_URL: "http://localhost:8081/WebAPI/"
+    volumes:
+      - ./config-local.js:/usr/share/nginx/html/atlas/js/config-local.js
+    depends_on:
+      - webapi
