@@ -52,6 +52,7 @@ install2.r --error \
   ParallelLogger \
   SqlRender \
   DatabaseConnector
+
 R -e "library(DatabaseConnector); downloadJdbcDrivers('postgresql')"
 EOF
 
